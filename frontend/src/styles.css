@@ -1393,6 +1393,51 @@ button:disabled {
   object-fit: cover;
 }
 
+.camera-fallback-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 24px;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #0f1c3f 0%, #030712 100%);
+  color: var(--text);
+  z-index: 2;
+}
+
+.camera-diag-box {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin: 10px auto;
+  max-width: 500px;
+  font-size: 0.82rem;
+  color: #fca5a5;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.camera-fallback-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.camera-device-select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.80rem;
+  outline: none;
+}
+
 .camera-reticle-overlay {
   position: absolute;
   top: 0;
