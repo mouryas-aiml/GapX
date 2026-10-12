@@ -17,6 +17,8 @@ import {
   Store,
   Menu,
   X,
+  Sparkles,
+  Terminal,
 } from "lucide-react";
 import { checkHealthDetails } from "./api";
 import type { AnalysisResult, AuditEntry, HealthInfo } from "./types";
@@ -44,6 +46,7 @@ const navItems = [
 const API_STORAGE_KEY = "gapx-api-url";
 const AUDITS_STORAGE_KEY = "gapx-audit-history";
 const THEME_STORAGE_KEY = "gapx-theme";
+const SIM_STORAGE_KEY = "gapx-sim-mode";
 
 function getStored<T>(key: string, fallback: T): T {
   const raw = localStorage.getItem(key);
@@ -70,6 +73,11 @@ export function App() {
     (localStorage.getItem(THEME_STORAGE_KEY) as "dark" | "light" | null) || "dark"
   );
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [simulationMode, setSimulationMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem(SIM_STORAGE_KEY);
+    if (saved !== null) return saved === "true";
+    return typeof window !== "undefined" && window.location.protocol === "https:";
+  });
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -83,6 +91,10 @@ export function App() {
   useEffect(() => {
     localStorage.setItem(API_STORAGE_KEY, apiBaseUrl);
   }, [apiBaseUrl]);
+
+  useEffect(() => {
+    localStorage.setItem(SIM_STORAGE_KEY, String(simulationMode));
+  }, [simulationMode]);
 
   useEffect(() => {
     let active = true;
@@ -124,6 +136,13 @@ export function App() {
   }
 
   const isConnected = !!healthInfo && healthInfo.status === "ok";
+
+  const isMixedContent =
+    typeof window !== "undefined" &&
+    window.location.protocol === "https:" &&
+    apiBaseUrl.startsWith("http://");
+
+  const [showConnectionGuide, setShowConnectionGuide] = useState(false);
 
   return (
     <div className="app-shell">
@@ -179,11 +198,17 @@ export function App() {
         {/* Sidebar Footer Telemetry */}
         <div className="sidebar-footer">
           <div className="footer-status">
-            <div className={`status-dot ${isConnected ? "online" : "offline"}`} />
+            <div className={`status-dot ${isConnected ? "online" : simulationMode ? "online" : "offline"}`} />
             <div className="footer-status-text">
-              <span className="status-label">{isConnected ? "AI Vision Engine Live" : "API Offline"}</span>
+              <span className="status-label">
+                {isConnected ? "AI Vision Engine Live" : simulationMode ? "Demo Sim Engine Active" : "API Offline"}
+              </span>
               <span className="status-sub">
-                {isConnected ? `${healthInfo?.ping_ms ?? 12}ms &bull; Port 8210` : "Reconnecting..."}
+                {isConnected
+                  ? `${healthInfo?.ping_ms ?? 12}ms \u2022 Port 8210`
+                  : simulationMode
+                  ? "Interactive Demo Mode"
+                  : "Click status to fix"}
               </span>
             </div>
           </div>
@@ -207,15 +232,53 @@ export function App() {
                 <span className="topbar-title">Retail Shelf Command Center</span>
                 <span className="badge-pill store-badge">Store #402</span>
               </div>
-              <p className="topbar-sub">{apiBaseUrl}</p>
+              <p className="topbar-sub">
+                {isConnected ? apiBaseUrl : simulationMode ? "⚡ Demo Simulation Mode (Offline Preview)" : apiBaseUrl}
+              </p>
             </div>
           </div>
 
           <div className="topbar-actions">
-            <div className={`status-pill ${isConnected ? "ok" : "down"}`}>
-              <Activity size={13} style={{ marginRight: 5 }} />
-              {isConnected ? `Online (${healthInfo?.ping_ms ?? 10}ms)` : "API Disconnected"}
-            </div>
+            {isConnected ? (
+              <div
+                className="status-pill ok"
+                title={`FastAPI backend is live at ${apiBaseUrl}`}
+              >
+                <Activity size={13} style={{ marginRight: 5 }} />
+                Online ({healthInfo?.ping_ms ?? 10}ms)
+              </div>
+            ) : simulationMode ? (
+              <div
+                className="status-pill sim clickable"
+                onClick={() => setShowConnectionGuide(true)}
+                title="Running in Interactive Simulation Mode. Click for local run commands or cloud backend options."
+              >
+                <Sparkles size={13} style={{ marginRight: 5 }} />
+                Simulation Mode
+              </div>
+            ) : (
+              <div
+                className="status-pill down clickable"
+                onClick={() => setShowConnectionGuide(true)}
+                title="FastAPI backend is disconnected. Click to view local and cloud setup instructions."
+              >
+                <Activity size={13} style={{ marginRight: 5 }} />
+                API Disconnected
+              </div>
+            )}
+
+            {!isConnected && (
+              <button
+                type="button"
+                className={`secondary btn-sm`}
+                onClick={() => setSimulationMode((v) => !v)}
+                title={simulationMode ? "Switch off simulation mode" : "Enable offline demo simulation"}
+                style={{ padding: "5px 11px", fontSize: "0.8rem", display: "inline-flex", alignItems: "center", gap: 5 }}
+              >
+                <Sparkles size={13} />
+                {simulationMode ? "Sim Active" : "Enable Sim"}
+              </button>
+            )}
 
             <button
               type="button"
@@ -227,6 +290,150 @@ export function App() {
             </button>
           </div>
         </header>
+
+        {/* Vercel HTTPS Mixed Content Banner */}
+        {isMixedContent && !isConnected && (
+          <div className="mixed-content-banner card mb-3">
+            <div className="banner-left">
+              <span className="banner-badge">Vercel Deployment Notice</span>
+              <p>
+                This app is hosted on <strong>HTTPS (Vercel)</strong>. Browsers block requests to <code>http://localhost:8210</code> (Mixed Content).
+                {simulationMode
+                  ? " Running in Interactive Demo Simulation so every page, alert, planogram, and benchmark works smoothly!"
+                  : " Click 'Enable Sim' to test all features now, or follow the local run guide to start the live Python AI engine."}
+              </p>
+            </div>
+            <div className="banner-actions">
+              {!simulationMode && (
+                <button
+                  type="button"
+                  className="btn-primary-link btn-sm"
+                  onClick={() => setSimulationMode(true)}
+                >
+                  ⚡ Enable Demo Mode
+                </button>
+              )}
+              <button
+                type="button"
+                className="secondary btn-sm"
+                onClick={() => setShowConnectionGuide(true)}
+              >
+                How to Run on Local
+              </button>
+              <Link to="/settings" className="secondary btn-sm">
+                Open Settings
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Connection Troubleshooter Modal */}
+        {showConnectionGuide && (
+          <div className="modal-backdrop">
+            <div className="modal-content connection-modal card">
+              <div className="modal-header">
+                <h3>Connecting GapX to the Python Backend</h3>
+                <button
+                  type="button"
+                  className="icon-btn close-btn"
+                  onClick={() => setShowConnectionGuide(false)}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="modal-body">
+                <p className="text-muted">
+                  The frontend is currently unable to communicate with <code>{apiBaseUrl}</code>. Here is why and how to fix it:
+                </p>
+
+                <div className="solution-card">
+                  <div className="solution-title">
+                    <strong>1. Run Locally on Your Machine (Full Real AI Vision Pipeline)</strong>
+                  </div>
+                  <p>When running on your computer, both frontend and backend run under HTTP, bypassing browser Mixed Content blocks entirely:</p>
+                  <pre>
+                    <code># Terminal 1 — Start the FastAPI Backend:
+cd K:\GapX
+uv run uvicorn shelfsight.api.main:app --host 127.0.0.1 --port 8210 --reload
+
+# Terminal 2 — Start the React Frontend:
+cd K:\GapX\frontend
+npm run dev -- --host 127.0.0.1 --port 5173</code>
+                  </pre>
+                  <p className="text-muted text-sm">
+                    Open <strong>http://localhost:5173</strong> in your browser — the status will immediately turn green: <code>Online (4ms)</code>.
+                  </p>
+                </div>
+
+                <div className="solution-card">
+                  <div className="solution-title">
+                    <strong>2. Instant Free HTTPS Tunnel for Vercel (No Cloud Setup Needed)</strong>
+                  </div>
+                  <p>Expose your local port 8210 over HTTPS so the Vercel site can reach it securely:</p>
+                  <pre>
+                    <code>npx localtunnel --port 8210
+# OR with Cloudflare:
+cloudflared tunnel --url http://localhost:8210</code>
+                  </pre>
+                  <p className="text-muted text-sm">
+                    Copy the generated <code>https://...</code> URL into <Link to="/settings" onClick={() => setShowConnectionGuide(false)}>Settings</Link> and click <strong>Save URL</strong>.
+                  </p>
+                </div>
+
+                <div className="solution-card">
+                  <div className="solution-title">
+                    <strong>3. Interactive Demo Simulation Mode (Works Instantly in Browser)</strong>
+                  </div>
+                  <p>
+                    Evaluate all shelf analysis overlays, stockout gap boxes, planogram compliance matrices, restock pick slips, and benchmark reports without needing Python installed:
+                  </p>
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      className="primary btn-sm"
+                      onClick={() => {
+                        setSimulationMode(true);
+                        setShowConnectionGuide(false);
+                      }}
+                    >
+                      ⚡ Activate Demo Simulation Mode Now
+                    </button>
+                  </div>
+                </div>
+
+                <div className="solution-card">
+                  <div className="solution-title">
+                    <strong>4. Deploy Backend to Free Container Cloud (Render / Railway)</strong>
+                  </div>
+                  <p>Deploy the FastAPI backend to Render or Railway:</p>
+                  <pre>
+                    <code>Build: uv sync --group dev
+Start: uv run uvicorn shelfsight.api.main:app --host 0.0.0.0 --port 10000</code>
+                  </pre>
+                  <p className="text-muted text-sm">
+                    In Vercel project environment variables, set <code>VITE_API_BASE_URL</code> = <code>https://your-service.onrender.com</code>.
+                  </p>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <Link
+                  to="/settings"
+                  className="btn-primary-link"
+                  onClick={() => setShowConnectionGuide(false)}
+                >
+                  Configure in Settings
+                </Link>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setShowConnectionGuide(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Page Routing */}
         <AnimatePresence mode="wait">

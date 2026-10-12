@@ -312,6 +312,123 @@ body {
   border-color: rgba(239, 68, 68, 0.35);
 }
 
+.status-pill.clickable {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.status-pill.clickable:hover {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: var(--danger);
+  transform: scale(1.03);
+}
+
+.status-pill.sim {
+  background: rgba(56, 189, 248, 0.16);
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.status-pill.sim:hover {
+  background: rgba(56, 189, 248, 0.28);
+  border-color: var(--accent);
+  transform: scale(1.03);
+}
+
+.mixed-content-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(239, 68, 68, 0.08));
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-sm);
+  padding: 14px 20px;
+  margin-bottom: 20px;
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.banner-left p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.banner-badge {
+  background: var(--warning);
+  color: #000;
+  font-weight: 800;
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.banner-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.btn-sm {
+  font-size: 0.8rem;
+  padding: 6px 12px;
+}
+
+.connection-modal {
+  width: min(100%, 720px);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.connection-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.solution-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+
+.solution-card p {
+  margin: 6px 0;
+  font-size: 0.85rem;
+}
+
+.solution-title {
+  color: var(--accent);
+  font-size: 0.92rem;
+}
+
+.solution-card pre {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.solution-card code {
+  color: #38bdf8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+}
+
+.text-sm {
+  font-size: 0.78rem;
+}
+
+
 .theme-toggle {
   background: var(--surface-2);
   border: 1px solid var(--border);
