@@ -13,7 +13,9 @@ API_URL = os.environ.get("GAPX_API_URL", API_URL)
 
 st.set_page_config(page_title="GapX", page_icon="🛒", layout="wide")
 st.title("🛒 GapX")
-st.caption("AI-powered retail shelf intelligence: gaps, stockouts, placement drift, and restock alerts")
+st.caption(
+    "AI-powered retail shelf intelligence: gaps, stockouts, placement drift, and restock alerts"
+)
 
 
 def _ok() -> bool:
@@ -24,7 +26,9 @@ def _ok() -> bool:
 
 
 if not _ok():
-    st.error(f"API not reachable at {API_URL}. Start it with `make api` or `uv run uvicorn shelfsight.api.main:app --reload --port 8210`.")
+    st.error(
+        f"API not reachable at {API_URL}. Start it with `make api` or `uv run uvicorn shelfsight.api.main:app --reload --port 8210`."
+    )
     st.stop()
 
 col1, col2 = st.columns(2)

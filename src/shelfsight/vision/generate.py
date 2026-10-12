@@ -46,6 +46,7 @@ def render_shelf(
         slot_width = width // max(len(row), 1)
         facings: dict[str, int] = {}
         gaps = 0
+        row_boxes: list[dict] = []
         for i, brand in enumerate(row):
             if brand is None:
                 gaps += 1
@@ -60,7 +61,10 @@ def render_shelf(
             # Label stripe (white band) for realism.
             stripe_y = top + (bottom - top) // 2
             img[stripe_y : stripe_y + 8, x0 + 6 : x1 - 6] = 245
-        truth.append({"row": r, "facings": facings, "gaps": gaps})
+            row_boxes.append(
+                {"row": r, "brand": brand, "x": x0, "y": top, "w": x1 - x0, "h": bottom - top}
+            )
+        truth.append({"row": r, "facings": facings, "gaps": gaps, "boxes": row_boxes})
 
     noise = rng.normal(0, 4, img.shape)
     img = np.clip(img.astype(np.int16) + noise, 0, 255).astype(np.uint8)

@@ -14,6 +14,9 @@ format:
 test:
 	uv run pytest --cov
 
+benchmark:
+	uv run python src/shelfsight/vision/benchmark.py
+
 api:
 	uv run uvicorn shelfsight.api.main:app --reload --port 8210
 

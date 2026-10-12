@@ -10,8 +10,8 @@ from typing import Any
 import cv2
 import numpy as np
 
-from shelfsight.settings import get_config
 from shelfsight.pipeline.registry import CVOperation, FilterContext, OperationRegistry
+from shelfsight.settings import get_config
 
 
 @OperationRegistry.register("bgr_to_hsv")
@@ -147,7 +147,9 @@ class PlanogramComplianceEvaluatorOp(CVOperation):
     def execute(self, ctx: FilterContext, **params: Any) -> FilterContext:
         expected_planogram = params.get("planogram", {})
         if not expected_planogram:
-            expected_planogram = {idx: row for idx, row in enumerate(get_config()["planogram"]["expected"])}
+            expected_planogram = {
+                idx: row for idx, row in enumerate(get_config()["planogram"]["expected"])
+            }
         if not expected_planogram:
             ctx.compliance_score = 1.0
             return ctx

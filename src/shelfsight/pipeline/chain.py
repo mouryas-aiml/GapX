@@ -10,8 +10,8 @@ from typing import Any
 
 import numpy as np
 
-from shelfsight.settings import get_config
 from shelfsight.pipeline.registry import CVOperation, FilterContext, OperationRegistry
+from shelfsight.settings import get_config
 
 
 @dataclass
@@ -53,8 +53,15 @@ class FilterChain:
         cfg = get_config()
         chain = cls()
         chain.add_step("bgr_to_hsv")
-        chain.add_step("row_band_segmenter", sat_floor=cfg["vision"]["saturation_floor"], min_band_height=25)
-        chain.add_step("brand_color_masker", sat_floor=cfg["vision"]["saturation_floor"], brands=cfg["brands"])
+        chain.add_step(
+            "row_band_segmenter", sat_floor=cfg["vision"]["saturation_floor"], min_band_height=25
+        )
+        chain.add_step(
+            "brand_color_masker", sat_floor=cfg["vision"]["saturation_floor"], brands=cfg["brands"]
+        )
         chain.add_step("contour_facing_detector", min_facing_width=15, min_area=400)
-        chain.add_step("planogram_compliance_evaluator", planogram={idx: row for idx, row in enumerate(cfg["planogram"]["expected"])})
+        chain.add_step(
+            "planogram_compliance_evaluator",
+            planogram={idx: row for idx, row in enumerate(cfg["planogram"]["expected"])},
+        )
         return chain

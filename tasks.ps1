@@ -12,6 +12,7 @@ switch ($Task) {
     "frontend-install" { Push-Location frontend; npm install; Pop-Location }
     "frontend-dev" { Push-Location frontend; npm run dev; Pop-Location }
     "frontend-build" { Push-Location frontend; npm run build; Pop-Location }
+    "benchmark"  { uv run python src/shelfsight/vision/benchmark.py }
     "mlflow"     { uv run mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5022 }
     "docker-up"  { docker compose up --build -d }
     "docker-down"{ docker compose down }
