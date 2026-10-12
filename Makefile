@@ -1,4 +1,4 @@
-.PHONY: install lint format test api ui mlflow docker-up docker-down
+.PHONY: install lint format test api ui frontend-install frontend-dev frontend-build mlflow docker-up docker-down
 
 install:
 	uv sync --group dev
@@ -19,6 +19,15 @@ api:
 
 ui:
 	GAPX_API_URL=http://localhost:8210 uv run streamlit run src/shelfsight/ui/app.py --server.port 8711
+
+frontend-install:
+	cd frontend && npm install
+
+frontend-dev:
+	cd frontend && npm run dev
+
+frontend-build:
+	cd frontend && npm run build
 
 mlflow:
 	uv run mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5022

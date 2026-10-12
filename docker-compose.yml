@@ -7,13 +7,13 @@ services:
     volumes:
       - ./data:/app/data
 
-  ui:
+  web:
     build:
       context: .
-      dockerfile: Dockerfile.ui
-    environment:
-      GAPX_API_URL: http://api:8000
+      dockerfile: Dockerfile.web
+      args:
+        VITE_API_BASE_URL: http://localhost:8210
     ports:
-      - "8711:8501"
+      - "5173:80"
     depends_on:
       - api

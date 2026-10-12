@@ -17,6 +17,9 @@ class Settings(BaseSettings):
 
     mlflow_tracking_uri: str = f"sqlite:///{REPO_ROOT / 'mlflow.db'}"
     config_path: Path = REPO_ROOT / "configs" / "config.yaml"
+    api_host: str = "127.0.0.1"
+    api_port: int = 8210
+    allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,http://localhost:8711,http://127.0.0.1:8711"
 
 
 @functools.lru_cache(maxsize=1)
@@ -33,3 +36,8 @@ def get_config() -> dict[str, Any]:
 def resolve_path(relative: str | Path) -> Path:
     p = Path(relative)
     return p if p.is_absolute() else REPO_ROOT / p
+
+
+def get_allowed_origins() -> list[str]:
+    raw = get_settings().allowed_origins
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]

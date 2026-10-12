@@ -9,6 +9,9 @@ switch ($Task) {
     "test"       { uv run pytest --cov }
     "api"        { uv run uvicorn shelfsight.api.main:app --reload --port 8210 }
     "ui"         { $env:GAPX_API_URL = "http://localhost:8210"; uv run streamlit run src/shelfsight/ui/app.py --server.port 8711 }
+    "frontend-install" { Push-Location frontend; npm install; Pop-Location }
+    "frontend-dev" { Push-Location frontend; npm run dev; Pop-Location }
+    "frontend-build" { Push-Location frontend; npm run build; Pop-Location }
     "mlflow"     { uv run mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5022 }
     "docker-up"  { docker compose up --build -d }
     "docker-down"{ docker compose down }
