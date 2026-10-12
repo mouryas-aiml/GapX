@@ -1,0 +1,27 @@
+# Pipeline configuration. Paths relative to the repo root.
+
+data:
+  images_dir: data/shelves
+  seed: 42
+
+brands:
+  # HSV hue centers (OpenCV hue range 0-179) for brand-color segmentation.
+  redco:    {hue: 0,   tol: 8}
+  bluebrand: {hue: 110, tol: 12}
+  greenfoods: {hue: 55,  tol: 12}
+  orangeline: {hue: 18,  tol: 7}
+
+vision:
+  min_facing_area: 900       # px^2, below this a contour is noise
+  gap_min_width: 40          # px of empty shelf to count as a gap
+  saturation_floor: 60       # below = shelf/background, above = product
+
+planogram:
+  # Expected left-to-right brand order per shelf row (top to bottom).
+  expected:
+    - [redco, redco, bluebrand, bluebrand]
+    - [greenfoods, greenfoods, orangeline, orangeline]
+    - [bluebrand, greenfoods, redco, orangeline]
+
+eval:
+  experiment_name: shelfsight
