@@ -1,3 +1,3 @@
-"""shelfsight: Retail shelf analytics with classical computer vision: product-facing segmentation, share-of-shelf by brand color, gap detection, and planogram compliance scoring."""
+"""GapX: AI-powered retail shelf intelligence for gaps, stockouts, and compliance."""
 
 __version__ = "0.1.0"

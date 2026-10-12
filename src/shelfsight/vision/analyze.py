@@ -4,6 +4,7 @@ planogram compliance. OpenCV only, every stage returns inspectable artifacts."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 import cv2
 import numpy as np
@@ -29,6 +30,12 @@ class RowAnalysis:
 
     def brand_order(self) -> list[str]:
         return [f.brand for f in sorted(self.facings, key=lambda f: f.x)]
+
+    def facing_count(self) -> int:
+        return len(self.facings)
+
+    def unique_brands(self) -> set[str]:
+        return {f.brand for f in self.facings}
 
 
 def _brand_masks(hsv: np.ndarray) -> dict[str, np.ndarray]:
@@ -95,7 +102,7 @@ def analyze_image(image_bgr: np.ndarray) -> dict:
             contours, _ = cv2.findContours(cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             for contour in contours:
                 x, y, w, h = cv2.boundingRect(contour)
-                if w * h < cfg["min_facing_area"]:
+                if w * h < cfg["min_facing_area"] or w < 10 or h < 10:
                     continue
                 analysis.facings.append(Facing(row=r, brand=brand, x=x, y=y0 + y, w=w, h=h))
                 occupied[x : x + w] = True
@@ -110,7 +117,7 @@ def analyze_image(image_bgr: np.ndarray) -> dict:
                 span = 0
         if span >= cfg["gap_min_width"]:
             gaps += 1
-        analysis.gaps = max(gaps - 0, 0)
+        analysis.gaps = gaps
         rows.append(analysis)
 
     all_facings = [f for row in rows for f in row.facings]
@@ -122,7 +129,16 @@ def analyze_image(image_bgr: np.ndarray) -> dict:
 
     return {
         "n_rows": len(rows),
-        "facings_per_row": [{"row": r.row, "order": r.brand_order(), "gaps": r.gaps} for r in rows],
+        "facings_per_row": [
+            {
+                "row": r.row,
+                "order": r.brand_order(),
+                "gaps": r.gaps,
+                "facings": r.facing_count(),
+                "brands": sorted(r.unique_brands()),
+            }
+            for r in rows
+        ],
         "total_facings": len(all_facings),
         "share_of_shelf": share,
         "boxes": [vars(f) for f in all_facings],
@@ -145,3 +161,62 @@ def planogram_compliance(detected_rows: list[dict]) -> dict:
         )
     overall = round(sum(r["compliance"] for r in per_row) / max(len(per_row), 1), 3)
     return {"overall": overall, "rows": per_row}
+
+
+def build_alerts(
+    detected_rows: list[dict[str, Any]],
+    planogram: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Derive actionable restocking alerts from row gaps and compliance drift."""
+
+    alerts: list[dict[str, Any]] = []
+    compliance = float((planogram or {}).get("overall", 1.0))
+    for row in detected_rows:
+        row_index = int(row["row"])
+        gaps = int(row.get("gaps", 0))
+        order = list(row.get("order", []))
+        if gaps > 0:
+            alerts.append(
+                {
+                    "severity": "high",
+                    "type": "restock-gap",
+                    "row": row_index,
+                    "message": f"Row {row_index + 1} has {gaps} empty shelf gap(s) that need restocking.",
+                }
+            )
+        expected = (planogram or {}).get("rows", [])
+        expected_row = next((item for item in expected if int(item["row"]) == row_index), None)
+        if expected_row is not None:
+            expected_order = list(expected_row.get("expected", []))
+            if len(order) < len(expected_order):
+                missing = len(expected_order) - len(order)
+                alerts.append(
+                    {
+                        "severity": "medium",
+                        "type": "stockout-risk",
+                        "row": row_index,
+                        "message": (
+                            f"Row {row_index + 1} is missing {missing} expected facing(s) "
+                            "relative to the planogram."
+                        ),
+                    }
+                )
+    if compliance < 0.9 and not alerts:
+        alerts.append(
+            {
+                "severity": "medium",
+                "type": "planogram-drift",
+                "row": None,
+                "message": "Planogram compliance is below target; review the detected product order.",
+            }
+        )
+    if not alerts:
+        alerts.append(
+            {
+                "severity": "low",
+                "type": "healthy-shelf",
+                "row": None,
+                "message": "No urgent restocking issues detected in the current frame.",
+            }
+        )
+    return alerts

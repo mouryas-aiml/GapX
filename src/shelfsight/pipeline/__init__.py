@@ -1,4 +1,4 @@
-"""Named Operation Registry & Filter Chain Package for ShelfSight.
+"""Named Operation Registry & Filter Chain Package for GapX.
 
 Provides dynamic CV operation registration and declarative filter chains.
 """

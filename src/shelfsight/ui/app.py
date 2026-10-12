@@ -9,10 +9,11 @@ import httpx
 import streamlit as st
 
 API_URL = os.environ.get("SHELFSIGHT_API_URL", "http://localhost:8210")
+API_URL = os.environ.get("GAPX_API_URL", API_URL)
 
-st.set_page_config(page_title="shelfsight", page_icon="🛒", layout="wide")
-st.title("🛒 shelfsight")
-st.caption("Classical-CV shelf analytics: facings, share-of-shelf, gaps, planogram compliance")
+st.set_page_config(page_title="GapX", page_icon="🛒", layout="wide")
+st.title("🛒 GapX")
+st.caption("AI-powered retail shelf intelligence: gaps, stockouts, placement drift, and restock alerts")
 
 
 def _ok() -> bool:
@@ -23,7 +24,7 @@ def _ok() -> bool:
 
 
 if not _ok():
-    st.error(f"API not reachable at {API_URL}. Start it with `make api`.")
+    st.error(f"API not reachable at {API_URL}. Start it with `make api` or `uv run uvicorn shelfsight.api.main:app --reload --port 8210`.")
     st.stop()
 
 col1, col2 = st.columns(2)
@@ -62,13 +63,22 @@ for box in body["boxes"]:
     )
 st.image(cv2.cvtColor(overlay, cv2.COLOR_BGR2RGB), caption="Detected facings", width="stretch")
 
-c1, c2, c3 = st.columns(3)
+c1, c2, c3, c4 = st.columns(4)
 c1.metric("Facings", body["total_facings"])
 c2.metric("Gaps", sum(row["gaps"] for row in body["facings_per_row"]))
 c3.metric("Planogram compliance", f"{body['planogram']['overall']:.0%}")
+c4.metric("Alerts", len(body.get("alerts", [])))
 
 st.subheader("Share of shelf")
 st.bar_chart(body["share_of_shelf"])
+
+st.subheader("Restocking alerts")
+if body.get("alerts"):
+    for alert in body["alerts"]:
+        prefix = {"high": "🔴", "medium": "🟠", "low": "⚪"}.get(alert["severity"], "ℹ️")
+        st.write(f"{prefix} {alert['message']}")
+else:
+    st.success("No alerts returned by the API.")
 
 st.subheader("Per-row planogram check")
 for row in body["planogram"]["rows"]:

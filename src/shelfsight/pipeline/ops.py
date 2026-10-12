@@ -1,4 +1,4 @@
-"""Named CV Operations for ShelfSight.
+"""Named CV Operations for GapX.
 
 Implements discrete computer vision operations registered with @OperationRegistry.register.
 """
@@ -10,6 +10,7 @@ from typing import Any
 import cv2
 import numpy as np
 
+from shelfsight.settings import get_config
 from shelfsight.pipeline.registry import CVOperation, FilterContext, OperationRegistry
 
 
@@ -71,11 +72,7 @@ class BrandColorMaskerOp(CVOperation):
     def execute(self, ctx: FilterContext, **params: Any) -> FilterContext:
         brands = params.get(
             "brands",
-            {
-                "Sparkle": {"hue": 10, "tol": 12},
-                "PureGlow": {"hue": 60, "tol": 14},
-                "FreshMint": {"hue": 110, "tol": 15},
-            },
+            get_config()["brands"],
         )
         sat_floor = params.get("sat_floor", 70)
 
@@ -149,8 +146,14 @@ class PlanogramComplianceEvaluatorOp(CVOperation):
 
     def execute(self, ctx: FilterContext, **params: Any) -> FilterContext:
         expected_planogram = params.get("planogram", {})
-        if not expected_planogram or not ctx.facings:
+        if not expected_planogram:
+            expected_planogram = {idx: row for idx, row in enumerate(get_config()["planogram"]["expected"])}
+        if not expected_planogram:
             ctx.compliance_score = 1.0
+            return ctx
+        if not ctx.facings:
+            ctx.compliance_score = 0.0
+            ctx.artifacts["compliance_score"] = ctx.compliance_score
             return ctx
 
         total_checks = 0

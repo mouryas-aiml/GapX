@@ -12,7 +12,7 @@ services:
       context: .
       dockerfile: Dockerfile.ui
     environment:
-      SHELFSIGHT_API_URL: http://api:8000
+      GAPX_API_URL: http://api:8000
     ports:
       - "8711:8501"
     depends_on:

@@ -8,7 +8,7 @@ from shelfsight.api.main import create_app
 from shelfsight.vision.analyze import analyze_image, detect_rows, planogram_compliance
 from shelfsight.vision.generate import render_shelf
 
-CLEAN = [
+CLEAN: list[list[str | None]] = [
     ["redco", "redco", "bluebrand", "bluebrand"],
     ["greenfoods", "greenfoods", "orangeline", "orangeline"],
     ["bluebrand", "greenfoods", "redco", "orangeline"],
@@ -46,7 +46,7 @@ def test_brand_order_recovered():
 
 
 def test_gaps_detected():
-    with_gaps = [row[:] for row in CLEAN]
+    with_gaps: list[list[str | None]] = [row[:] for row in CLEAN]
     with_gaps[1][1] = None
     img, _ = _bgr(with_gaps, seed=2)
     result = analyze_image(img)
@@ -68,6 +68,7 @@ def test_api_demo_and_analyze():
     client = TestClient(create_app())
     body = client.get("/demo").json()
     assert body["planogram"]["overall"] == 1.0
+    assert body["alerts"]
     rgb, _ = render_shelf(CLEAN, seed=4)
     ok, png = cv2.imencode(".png", cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
     assert ok
@@ -79,6 +80,12 @@ def test_api_demo_and_analyze():
 def test_api_rejects_non_image():
     client = TestClient(create_app())
     r = client.post("/analyze", files={"file": ("x.txt", b"not an image", "text/plain")})
+    assert r.status_code == 422
+
+
+def test_api_rejects_empty_upload():
+    client = TestClient(create_app())
+    r = client.post("/analyze", files={"file": ("empty.png", b"", "image/png")})
     assert r.status_code == 422
 
 

@@ -1,4 +1,4 @@
-"""Unit tests for the Named Operation Registry and Filter Chain in ShelfSight."""
+"""Unit tests for the Named Operation Registry and Filter Chain in GapX."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from shelfsight.pipeline import (
     FilterContext,
     OperationRegistry,
 )
+from shelfsight.settings import get_config
 
 
 @pytest.fixture
@@ -55,7 +56,7 @@ def test_filter_chain_execution(synthetic_shelf_image):
     assert isinstance(ctx, FilterContext)
     assert ctx.hsv is not None
     assert len(ctx.row_bands) >= 2
-    assert len(ctx.masks) == 3
+    assert len(ctx.masks) == len(get_config()["brands"])
     assert len(ctx.facings) >= 2
     assert "total_facings_detected" in ctx.artifacts
     assert 0.0 <= ctx.compliance_score <= 1.0

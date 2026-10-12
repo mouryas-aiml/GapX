@@ -24,4 +24,4 @@ planogram:
     - [bluebrand, greenfoods, redco, orangeline]
 
 eval:
-  experiment_name: shelfsight
+  experiment_name: gapx

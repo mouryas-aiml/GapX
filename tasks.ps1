@@ -8,7 +8,7 @@ switch ($Task) {
     "format"     { uv run ruff check --fix .; uv run ruff format . }
     "test"       { uv run pytest --cov }
     "api"        { uv run uvicorn shelfsight.api.main:app --reload --port 8210 }
-    "ui"         { $env:SHELFSIGHT_API_URL = "http://localhost:8210"; uv run streamlit run src/shelfsight/ui/app.py --server.port 8711 }
+    "ui"         { $env:GAPX_API_URL = "http://localhost:8210"; uv run streamlit run src/shelfsight/ui/app.py --server.port 8711 }
     "mlflow"     { uv run mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5022 }
     "docker-up"  { docker compose up --build -d }
     "docker-down"{ docker compose down }
